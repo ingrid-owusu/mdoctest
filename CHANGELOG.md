@@ -4,6 +4,17 @@ All notable changes to mdoctest are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.4.1] - 2026-09-17
+
+### Fixed
+- **Here-documents in console sessions.** A `$` command that opens a here-doc
+  (`cat <<END` … `END`) had its body misread as expected output and the command
+  sent to the shell alone, so the shell blocked on stdin waiting for the
+  delimiter and the block hung to a timeout. The here-doc body and terminator
+  are now kept as part of the command (including body lines that start with the
+  prompt, `<<-`, and quoted delimiters), and `--fix` rewrites such blocks
+  without corrupting the here-doc. This is a common README pattern.
+
 ## [0.4.0] - 2026-09-17
 
 ### Added

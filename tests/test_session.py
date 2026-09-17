@@ -63,3 +63,41 @@ def test_parse_session_backslash_continuation_no_prompt():
     assert len(s.commands) == 1
     assert s.commands[0].cmd == "printf 'a\\nb\\n' | grep \\\n    b"
     assert s.commands[0].expected == "b"
+
+
+def test_parse_session_heredoc_body_kept_in_command():
+    body = "$ cat <<END\nalpha\nbeta\nEND\nalpha\nbeta"
+    s = parse_session(body)
+    assert len(s.commands) == 1
+    assert s.commands[0].cmd == "cat <<END\nalpha\nbeta\nEND"
+    assert s.commands[0].expected == "alpha\nbeta"
+
+
+def test_parse_session_heredoc_prompt_line_in_body_not_new_command():
+    # A body line beginning with the prompt is literal heredoc input, not a
+    # new command, until the delimiter closes the here-doc.
+    body = "$ cat <<END\n$ still body\nEND\nplain output"
+    s = parse_session(body)
+    assert len(s.commands) == 1
+    assert s.commands[0].cmd == "cat <<END\n$ still body\nEND"
+    assert s.commands[0].expected == "plain output"
+
+
+def test_parse_session_heredoc_dash_and_quoted_delim():
+    body = "$ cat <<-'EOF'\n\tindented\nEOF\nindented"
+    s = parse_session(body)
+    assert len(s.commands) == 1
+    assert s.commands[0].cmd == "cat <<-'EOF'\n\tindented\nEOF"
+
+
+def test_reconstruct_session_heredoc_no_cont_prefix():
+    from mdoctest.core import _reconstruct_session
+
+    class C:
+        def __init__(self, command, actual):
+            self.command = command
+            self.actual = actual
+
+    out = _reconstruct_session(
+        [C("cat <<END\nalpha\nEND", "alpha")], "$ ", "> ")
+    assert out == "$ cat <<END\nalpha\nEND\nalpha"

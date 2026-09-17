@@ -15,7 +15,7 @@ from .parser import Block, parse_blocks
 from .pydoctest import check as pydoctest_check
 from .pydoctest import fix as pydoctest_fix
 from .pydoctest import is_pydoctest
-from .session import Shell, parse_session
+from .session import Shell, parse_session, _pending_heredoc
 
 CONSOLE_LANGS = {"console", "shell-session", "sh-session", "shellsession",
                  "terminal", "con"}
@@ -114,8 +114,14 @@ def _reconstruct_session(cmds, prompt, cont) -> str:
     for c in cmds:
         cmd_lines = c.command.split("\n")
         out_lines.append(prompt + cmd_lines[0])
-        for extra in cmd_lines[1:]:
-            out_lines.append(cont + extra)
+        for i, extra in enumerate(cmd_lines[1:], start=1):
+            # A here-document body/terminator must be emitted literally: if the
+            # command formed by the preceding physical lines is still inside a
+            # here-doc, this line is heredoc content, not a ``> `` continuation.
+            if _pending_heredoc("\n".join(cmd_lines[:i])):
+                out_lines.append(extra)
+            else:
+                out_lines.append(cont + extra)
         actual = normalize(c.actual)
         if actual:
             out_lines.extend(actual.split("\n"))

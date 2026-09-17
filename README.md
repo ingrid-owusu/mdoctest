@@ -61,8 +61,20 @@ $ echo "2024-01-15   ok" | tr -s ' '
 
 mdoctest runs each `$` command in a **persistent** shell (so `cd`, variables and
 functions carry across the session, just like a real terminal), captures its
-combined stdout+stderr, and compares it to the text you documented. Run it over
-your docs:
+combined stdout+stderr, and compares it to the text you documented. Multi-line
+constructs your README already uses just work — backslash continuations and
+**here-documents**:
+
+```console
+$ cat <<'EOF'
+line one
+line two
+EOF
+line one
+line two
+```
+
+Run it over your docs:
 
 <!-- mdoctest: skip -->
 ```console

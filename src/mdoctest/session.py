@@ -46,7 +46,15 @@ def parse_session(body: str, prompt: str = "$ ", cont: str = "> ") -> ParsedSess
             commands.append(Command(cur, "\n".join(exp)))
 
     for line in body.split("\n"):
-        if cur is not None and not exp and _backslash_continues(cur):
+        if cur is not None and not exp and _pending_heredoc(cur):
+            # We're inside an unterminated here-document opened earlier in this
+            # command (``cat <<END`` … ``END``). Every physical line up to and
+            # including the delimiter is literal shell input — NOT expected
+            # output, and NOT a new command even if it starts with ``$ ``.
+            # Without this the command would be sent alone and the shell would
+            # block on stdin waiting for the delimiter, hanging to a timeout.
+            cur = cur + "\n" + line
+        elif cur is not None and not exp and _backslash_continues(cur):
             # Previous command line ends with an (odd) trailing backslash, so
             # this physical line continues the same shell command, even without
             # a ``> `` continuation prompt. Real READMEs wrap long piped
@@ -66,6 +74,26 @@ def parse_session(body: str, prompt: str = "$ ", cont: str = "> ") -> ParsedSess
         # text before the first prompt is ignored
     flush()
     return ParsedSession(commands)
+
+
+_HEREDOC_RE = re.compile(r"<<-?\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1")
+
+
+def _pending_heredoc(command: str):
+    """Return the delimiter of an unterminated here-document in *command*, or
+    ``None``. Handles ``<<``/``<<-`` and quoted delimiters, and multiple
+    here-docs opened on one line (bash reads their bodies in order)."""
+    open_delims: List[tuple] = []  # (delim, strip_leading_tabs)
+    for line in command.split("\n"):
+        if open_delims:
+            delim, strip = open_delims[0]
+            check = line.lstrip("\t") if strip else line
+            if check == delim:
+                open_delims.pop(0)
+            continue
+        for m in re.finditer(r"<<(-?)\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\2", line):
+            open_delims.append((m.group(3), m.group(1) == "-"))
+    return open_delims[0][0] if open_delims else None
 
 
 def _backslash_continues(command: str) -> bool:
