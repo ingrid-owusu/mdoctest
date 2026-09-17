@@ -175,6 +175,33 @@ And use `skip` to tell mdoctest to leave an illustrative block alone:
 $ rm -rf / --no-preserve-root   # never actually run
 ```
 
+## Fixtures for examples that assume files exist
+
+Most real READMEs show a command like `$ cat data.csv` or `$ ./run input.txt` —
+examples that only work if some file already exists. A **setup block** seeds
+those fixtures. It's an ordinary HTML comment, so it is **invisible in the
+rendered Markdown** and never clutters your docs, but mdoctest runs its shell
+script before the session blocks that follow it:
+
+<!-- mdoctest: setup
+cat > greeting.txt <<'END'
+hello
+world
+END
+-->
+
+```console
+$ cat greeting.txt
+hello
+world
+```
+
+The block above reads `greeting.txt` — a file this repo doesn't contain. The
+setup comment right before it (which you can't see in the rendered page)
+created it. Sessions in a file that uses setup run in a fresh throwaway
+directory, so your fixtures **never touch your repo or working tree**; the
+sandbox is deleted when the check finishes.
+
 ## What runs, and what doesn't
 
 mdoctest is conservative on purpose — it will not execute a block unless it is
@@ -189,6 +216,10 @@ clearly meant to be executable:
 | any block preceded by `<!-- mdoctest: run -->` | ✅ run, must exit 0 |
 | any block preceded by `<!-- mdoctest: skip -->` | ⛔ ignored |
 | everything else (plain ` ```python `, ` ```json `, ...) | ⛔ ignored |
+
+A `<!-- mdoctest: setup ... -->` comment isn't a code block at all — it's an
+invisible fixture script that runs before the session blocks after it (see
+[Fixtures](#fixtures-for-examples-that-assume-files-exist)).
 
 ## Use it in CI (GitHub Action)
 

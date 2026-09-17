@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 from .match import matches, normalize
-from .parser import Block, parse_blocks
+from .parser import Block, parse_blocks, parse_setups
 from .pydoctest import check as pydoctest_check
 from .pydoctest import fix as pydoctest_fix
 from .pydoctest import is_pydoctest
@@ -140,6 +140,7 @@ def process_file(path: str, opts: Options, fix: bool = False) -> FileResult:
     trailing_nl = text.endswith("\n")
     lines = text.split("\n")
     blocks = parse_blocks(text)
+    setups = parse_setups(text)
     # Collect edits for fix mode as (body_start, body_end, new_body_lines).
     edits = []
     cwd = opts.cwd or os.path.dirname(os.path.abspath(path)) or None
@@ -179,14 +180,28 @@ def process_file(path: str, opts: Options, fix: bool = False) -> FileResult:
         parsed = parse_session(block.content, opts.prompt, opts.cont)
         if not parsed.commands:
             continue
-        with Shell(opts.shell, cwd=cwd, timeout=opts.timeout) as sh:
-            for c in parsed.commands:
-                actual, _code = sh.run(c.cmd)
-                ok = matches(c.expected, actual)
-                cr = CmdResult(c.cmd, c.expected, actual, ok)
-                br.cmds.append(cr)
-                if not ok:
-                    br.ok = False
+        # Setup fixtures: any `<!-- mdoctest: setup -->` block earlier in the
+        # document seeds this session. To keep fixtures from touching the user's
+        # repo, sessions run in a throwaway sandbox dir whenever the file uses
+        # setup at all; otherwise cwd stays the Markdown file's directory.
+        pre_scripts = [s.script for s in setups
+                       if s.open_line < block.open_line and s.script.strip()]
+        sandbox = tempfile.mkdtemp(prefix="mdoctest-setup-") if setups else None
+        run_cwd = sandbox or cwd
+        try:
+            with Shell(opts.shell, cwd=run_cwd, timeout=opts.timeout) as sh:
+                for ps in pre_scripts:
+                    sh.run(ps)
+                for c in parsed.commands:
+                    actual, _code = sh.run(c.cmd)
+                    ok = matches(c.expected, actual)
+                    cr = CmdResult(c.cmd, c.expected, actual, ok)
+                    br.cmds.append(cr)
+                    if not ok:
+                        br.ok = False
+        finally:
+            if sandbox:
+                shutil.rmtree(sandbox, ignore_errors=True)
         fr.blocks.append(br)
 
         if fix and not br.ok:

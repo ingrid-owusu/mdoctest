@@ -14,6 +14,20 @@ from typing import Dict, List, Optional
 
 _FENCE_RE = re.compile(r"^(?P<indent> {0,3})(?P<fence>`{3,}|~{3,})(?P<info>.*)$")
 _DIRECTIVE_RE = re.compile(r"^\s*<!--\s*mdoctest:\s*(?P<body>.*?)\s*-->\s*$")
+_SETUP_OPEN_RE = re.compile(r"^\s*<!--\s*mdoctest:\s*setup\b(?P<rest>.*)$")
+
+
+@dataclass
+class Setup:
+    """An invisible ``<!-- mdoctest: setup ... -->`` fixture block.
+
+    The comment is hidden in rendered Markdown, so it never clutters the docs a
+    reader sees, but mdoctest runs its shell script (in a throwaway sandbox
+    directory) before the session blocks that follow it — the natural way to
+    create the fixture files/env a real README's examples assume already exist.
+    """
+    open_line: int   # 0-based line of the opening ``<!--``
+    script: str      # shell script body (lines joined with "\n")
 
 
 @dataclass
@@ -102,6 +116,59 @@ def parse_blocks(text: str) -> List[Block]:
         ))
         i = close_line + 1
     return blocks
+
+
+def parse_setups(text: str) -> List["Setup"]:
+    """Find every ``<!-- mdoctest: setup ... -->`` block and return its script.
+
+    Both one-line (``<!-- mdoctest: setup mkdir demo -->``) and multi-line forms
+    are supported; a multi-line comment runs until the closing ``-->``::
+
+        <!-- mdoctest: setup
+        cat > data.csv <<'END'
+        a,b
+        END
+        -->
+
+    Any line may contain shell (including here-documents) as long as it does not
+    contain the comment terminator ``-->``.
+    """
+    lines = text.split("\n")
+    setups: List[Setup] = []
+    i = 0
+    n = len(lines)
+    while i < n:
+        m = _SETUP_OPEN_RE.match(lines[i])
+        if not m:
+            i += 1
+            continue
+        open_line = i
+        rest = m.group("rest")
+        script: List[str] = []
+        # One-line form: everything before --> on the opening line is the script.
+        if "-->" in rest:
+            body = rest.split("-->", 1)[0]
+            if body.strip():
+                script.append(body.strip())
+            setups.append(Setup(open_line, "\n".join(script)))
+            i += 1
+            continue
+        if rest.strip():
+            script.append(rest.strip())
+        j = i + 1
+        closed_at = None
+        while j < n:
+            if "-->" in lines[j]:
+                before = lines[j].split("-->", 1)[0]
+                if before.strip():
+                    script.append(before)
+                closed_at = j
+                break
+            script.append(lines[j])
+            j += 1
+        setups.append(Setup(open_line, "\n".join(script)))
+        i = (closed_at + 1) if closed_at is not None else j
+    return setups
 
 
 def _find_directive(lines: List[str], open_line: int):

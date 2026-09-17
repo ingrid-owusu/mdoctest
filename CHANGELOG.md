@@ -4,6 +4,19 @@ All notable changes to mdoctest are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.5.0] - 2026-09-17
+
+### Added
+- **Invisible setup / fixture blocks.** A `<!-- mdoctest: setup ... -->` comment
+  holds a shell script that runs before the session blocks after it — the
+  natural way to create the files and environment that a real README's examples
+  assume already exist (`$ cat data.csv`, `$ ./run input.txt`, …). Because it's
+  an HTML comment it is hidden in the rendered Markdown, so it never clutters
+  your docs. When a file uses setup, its sessions run in a fresh throwaway
+  directory that is deleted afterward, so fixtures never touch your repo or
+  working tree. Supports multi-line scripts and here-documents; progressive
+  setups apply only to the blocks that follow them.
+
 ## [0.4.1] - 2026-09-17
 
 ### Fixed
