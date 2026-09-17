@@ -1,0 +1,7 @@
+- id: mdoctest
+  name: mdoctest (verify code examples in Markdown)
+  description: Run the console sessions and code in your Markdown docs and check their output.
+  entry: mdoctest
+  language: python
+  types: [markdown]
+  require_serial: true

@@ -1,0 +1,31 @@
+name: "mdoctest"
+description: "Verify the console sessions and code examples in your Markdown docs still work."
+branding:
+  icon: "check-square"
+  color: "green"
+inputs:
+  files:
+    description: "Space- or newline-separated Markdown files/globs to check (default: README.md)."
+    required: false
+    default: "README.md"
+  version:
+    description: "Version of mdoctest to install (PyPI spec, e.g. '==0.1.0'). Default: latest."
+    required: false
+    default: ""
+  args:
+    description: "Extra arguments passed to mdoctest (e.g. '--timeout 60')."
+    required: false
+    default: ""
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.x"
+    - name: Install mdoctest
+      shell: bash
+      run: python -m pip install --disable-pip-version-check "mdoctest${{ inputs.version }}"
+    - name: Run mdoctest
+      shell: bash
+      run: mdoctest ${{ inputs.args }} ${{ inputs.files }}
