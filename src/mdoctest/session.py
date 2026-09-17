@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import os
 import queue
+import re
 import subprocess
 import threading
 import time
@@ -45,7 +46,16 @@ def parse_session(body: str, prompt: str = "$ ", cont: str = "> ") -> ParsedSess
             commands.append(Command(cur, "\n".join(exp)))
 
     for line in body.split("\n"):
-        if line.startswith(prompt):
+        if cur is not None and not exp and _backslash_continues(cur):
+            # Previous command line ends with an (odd) trailing backslash, so
+            # this physical line continues the same shell command, even without
+            # a ``> `` continuation prompt. Real READMEs wrap long piped
+            # commands this way and just indent the continuation lines. If a
+            # ``> `` prompt is *also* present, strip it (both conventions used).
+            if line.startswith(cont):
+                line = line[len(cont):]
+            cur = cur + "\n" + line
+        elif line.startswith(prompt):
             flush()
             cur = line[len(prompt):]
             exp = []
@@ -56,6 +66,14 @@ def parse_session(body: str, prompt: str = "$ ", cont: str = "> ") -> ParsedSess
         # text before the first prompt is ignored
     flush()
     return ParsedSession(commands)
+
+
+def _backslash_continues(command: str) -> bool:
+    """True if *command*'s last physical line ends with a shell line
+    continuation (an odd number of trailing backslashes)."""
+    last = command.split("\n")[-1]
+    m = re.search(r"\\+$", last)
+    return bool(m) and len(m.group(0)) % 2 == 1
 
 
 class Shell:

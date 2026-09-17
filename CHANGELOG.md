@@ -4,6 +4,15 @@ All notable changes to mdoctest are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.3.1] - 2026-09-17
+
+### Fixed
+- **Backslash line-continuations in console sessions.** A shell command wrapped
+  across lines with a trailing `\` (with the continuation lines just indented,
+  as most READMEs write long piped commands) is now joined into a single
+  command instead of being sent half-finished — which previously left the shell
+  waiting for input and stalled the block until the timeout.
+
 ## [0.3.0] - 2026-09-17
 
 ### Added

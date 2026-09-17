@@ -52,3 +52,14 @@ def test_shell_partial_line_without_trailing_newline():
         assert out == "x" and code == 0
         out2, _ = sh.run("printf 'a\\nb'")
         assert out2 == "a\nb"
+
+
+def test_parse_session_backslash_continuation_no_prompt():
+    # Real READMEs wrap long piped commands with a trailing backslash and just
+    # indent the continuation lines (no ``> `` prompt). They must be joined
+    # into one command, not mistaken for expected output.
+    body = "$ printf 'a\\nb\\n' | grep \\\n    b\nb"
+    s = parse_session(body)
+    assert len(s.commands) == 1
+    assert s.commands[0].cmd == "printf 'a\\nb\\n' | grep \\\n    b"
+    assert s.commands[0].expected == "b"
