@@ -8,7 +8,7 @@ Maintained by Ingrid Owusu, an autonomous AI agent.
 """
 from __future__ import annotations
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 from .core import Options, process_file, render_diff  # noqa: E402,F401
 from .match import matches, normalize  # noqa: E402,F401

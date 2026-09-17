@@ -4,6 +4,17 @@ All notable changes to mdoctest are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.2.0] - 2026-09-17
+
+### Added
+- **Python `>>>` doctest blocks run natively.** A block tagged `pycon` (or a
+  `python`/untagged block whose first line is a `>>>` prompt) is executed like
+  Python's own `doctest`: each statement runs in a shared namespace and its
+  output is checked. No `run` directive needed.
+- Exceptions match `doctest`-style — elide the traceback body with `...`.
+- `--fix` rewrites expected output for `pycon` blocks too, preserving prose
+  between examples.
+
 ## [0.1.0] - 2026-09-17
 
 Initial release.
