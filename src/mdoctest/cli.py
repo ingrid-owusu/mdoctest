@@ -30,6 +30,30 @@ def _want_color(choice: str) -> bool:
     return sys.stdout.isatty() and os.environ.get("NO_COLOR") is None
 
 
+def _want_annotations(choice: str) -> bool:
+    if choice == "always":
+        return True
+    if choice == "never":
+        return False
+    return os.environ.get("GITHUB_ACTIONS") == "true"
+
+
+def _gh_escape_data(s: str) -> str:
+    return s.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+
+
+def _gh_escape_prop(s: str) -> str:
+    return (_gh_escape_data(s)
+            .replace(":", "%3A").replace(",", "%2C"))
+
+
+def _emit_annotation(path: str, line: int, message: str) -> None:
+    """Emit a GitHub Actions error workflow command so the failure shows up as
+    an inline annotation on the PR diff (not just buried in the log)."""
+    print("::error file=%s,line=%d,title=mdoctest::%s" % (
+        _gh_escape_prop(path), line, _gh_escape_data(message)))
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="mdoctest",
@@ -49,6 +73,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--cwd", default=None,
                    help="working directory (default: the Markdown file's dir)")
     p.add_argument("--color", choices=["auto", "always", "never"], default="auto")
+    p.add_argument("--annotate", choices=["auto", "always", "never"], default="auto",
+                   help="emit GitHub Actions ::error annotations for failures "
+                        "(auto: on when GITHUB_ACTIONS=true)")
     p.add_argument("-q", "--quiet", action="store_true", help="only print failures")
     p.add_argument("-V", "--version", action="version",
                    version="mdoctest %s" % __version__)
@@ -58,6 +85,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
     color = _want_color(args.color)
+    annotate = _want_annotations(args.annotate) and not args.fix
     paths = _expand(args.paths) if args.paths else (
         ["README.md"] if os.path.exists("README.md") else [])
     if not paths:
@@ -79,10 +107,14 @@ def main(argv=None) -> int:
             fr = process_file(path, opts, fix=args.fix)
         except SessionTimeout as e:
             sys.stderr.write("%s: %s\n" % (path, e))
+            if annotate:
+                _emit_annotation(path, 1, "timed out: %s" % e)
             total_failures += 1
             continue
         if fr.error:
             sys.stderr.write("%s: %s\n" % (path, fr.error))
+            if annotate:
+                _emit_annotation(path, 1, str(fr.error))
             total_failures += 1
             continue
 
@@ -101,16 +133,28 @@ def main(argv=None) -> int:
             print("%s  %s (%s)" % (c("31", "FAIL"), loc, b.kind))
             if b.kind in ("session", "pydoctest"):
                 prompt = ">>>" if b.kind == "pydoctest" else "$"
+                failed_cmd = None
                 for cr in b.cmds:
                     if cr.ok:
                         continue
+                    if failed_cmd is None:
+                        failed_cmd = cr.command
                     print("    %s %s" % (c("36", prompt), cr.command.replace("\n", "\n      ")))
                     diff = render_diff(cr.expected, cr.actual, color=color)
                     for dl in diff.split("\n"):
                         print("      " + dl)
+                if annotate:
+                    cmd1 = (failed_cmd or "").split("\n")[0]
+                    _emit_annotation(
+                        path, b.open_line,
+                        "output no longer matches for `%s` — run `mdoctest --fix`"
+                        % cmd1)
             elif b.message:
                 for dl in b.message.split("\n"):
                     print("      " + dl)
+                if annotate:
+                    _emit_annotation(path, b.open_line,
+                                     b.message.split("\n")[0])
 
     if args.fix:
         print("%s  fixed %d block(s) across %d file(s)"

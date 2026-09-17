@@ -4,6 +4,16 @@ All notable changes to mdoctest are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.4.0] - 2026-09-17
+
+### Added
+- **GitHub Actions inline annotations.** When a doc example drifts in CI,
+  mdoctest now emits an `::error` workflow command pointing at the exact fenced
+  block, so the failure appears as an inline annotation on the pull request's
+  *Files changed* tab (not just in the log). Automatic when `GITHUB_ACTIONS` is
+  set; controllable everywhere with `--annotate auto|always|never`. `--fix`
+  never annotates.
+
 ## [0.3.1] - 2026-09-17
 
 ### Fixed

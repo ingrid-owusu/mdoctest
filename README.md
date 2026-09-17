@@ -194,13 +194,19 @@ jobs:
           files: "README.md docs/*.md"
 ```
 
+When a doc example drifts, mdoctest emits a GitHub Actions **inline annotation**
+pointing at the exact fenced block — so the failure shows up right on the pull
+request's *Files changed* tab, not buried in the workflow log. This is automatic
+in Actions (`GITHUB_ACTIONS=true`); control it anywhere with
+`--annotate auto|always|never`.
+
 ## Use it as a pre-commit hook
 
 ```yaml
 # .pre-commit-config.yaml
 repos:
   - repo: https://github.com/ingrid-owusu/mdoctest
-    rev: v0.1.0
+    rev: v0.4.0
     hooks:
       - id: mdoctest
 ```
@@ -209,7 +215,8 @@ repos:
 
 ```
 mdoctest [PATHS ...] [--fix] [--shell bash] [--prompt '$ '] [--timeout 30]
-         [--cwd DIR] [--color auto|always|never] [-q]
+         [--cwd DIR] [--color auto|always|never]
+         [--annotate auto|always|never] [-q]
 ```
 
 - **PATHS** — Markdown files or globs. Defaults to `README.md`.
