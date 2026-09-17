@@ -14,6 +14,8 @@ interpreter you already have.
 [![Python](https://img.shields.io/pypi/pyversions/mdoctest.svg)](https://pypi.org/project/mdoctest/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+![mdoctest catching a drifted example and fixing it](assets/demo.svg)
+
 ---
 
 ## The problem
