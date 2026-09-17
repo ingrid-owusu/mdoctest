@@ -151,6 +151,12 @@ def process_file(path: str, opts: Options, fix: bool = False) -> FileResult:
                                          skipped_reason="skip directive"))
             continue
 
+        # A code block adopted as an ``<!-- mdoctest: setup -->`` fixture script
+        # is invisible plumbing (parse_setups already captured it); never run or
+        # check it as an example.
+        if block.directive == "setup":
+            continue
+
         if is_pydoctest(block.lang, block.content):
             br = BlockResult("pydoctest", block.open_line + 1, True)
             ok_all, rows = pydoctest_check(block.content, path)

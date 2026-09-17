@@ -4,6 +4,18 @@ All notable changes to mdoctest are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.5.1] - 2026-09-17
+
+### Added
+- **Block-attached setup form.** An empty `<!-- mdoctest: setup -->` comment
+  placed directly above a fenced code block now adopts that block as its fixture
+  script, mirroring how `run`/`skip` directives attach to the following block.
+  Previously an empty setup comment silently did nothing and the following block
+  was ignored, so `$ cat data.txt` examples failed with confusing "No such file"
+  errors — a real first-run footgun. The inline `<!-- mdoctest: setup ... -->`
+  form is unchanged. The adopted block is treated as invisible plumbing: it is
+  never run or checked as an example itself.
+
 ## [0.5.0] - 2026-09-17
 
 ### Added

@@ -202,6 +202,18 @@ created it. Sessions in a file that uses setup run in a fresh throwaway
 directory, so your fixtures **never touch your repo or working tree**; the
 sandbox is deleted when the check finishes.
 
+If you'd rather keep the fixture script visible (or just prefer the same
+pattern as `run`/`skip`), put an **empty** `<!-- mdoctest: setup -->` comment
+directly above a fenced block and mdoctest adopts that block as the script:
+
+    <!-- mdoctest: setup -->
+    ```sh
+    printf 'a\nb\n' > data.txt
+    ```
+
+That block is treated as fixture plumbing — it is never run or checked as an
+example itself; only the sessions after it are.
+
 ## What runs, and what doesn't
 
 mdoctest is conservative on purpose — it will not execute a block unless it is

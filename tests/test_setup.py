@@ -145,3 +145,76 @@ def test_setup_fix_still_works(tmp_path):
     new = open(path).read()
     assert "correct" in new
     assert "WRONG" not in new
+
+
+def test_block_attached_setup_parses_following_fence():
+    text = textwrap.dedent(
+        """\
+        # Doc
+
+        <!-- mdoctest: setup -->
+        ```sh
+        printf 'a\\nb\\n' > data.txt
+        ```
+
+        ```console
+        $ wc -l < data.txt
+        2
+        ```
+        """
+    )
+    setups = parse_setups(text)
+    assert len(setups) == 1
+    assert "printf 'a\\nb\\n' > data.txt" in setups[0].script
+
+
+def test_block_attached_setup_seeds_session(tmp_path):
+    path = _write(
+        tmp_path,
+        """\
+        <!-- mdoctest: setup -->
+        ```sh
+        printf 'a\\nb\\nc\\n' > data.txt
+        ```
+
+        ```console
+        $ cat data.txt
+        a
+        b
+        c
+        ```
+        """,
+    )
+    fr = process_file(path, Options())
+    assert fr.failures == 0
+    # Only the visible console block is checked; the setup block is not run/counted.
+    assert fr.checked == 1
+
+
+def test_block_attached_setup_block_is_not_executed(tmp_path):
+    # The adopted fixture block (a plain script) must not itself be checked as
+    # an example: only the visible session below it is checked/counted.
+    path = _write(
+        tmp_path,
+        """\
+        <!-- mdoctest: setup -->
+        ```sh
+        echo seed > s.txt
+        ```
+
+        ```console
+        $ cat s.txt
+        seed
+        ```
+        """,
+    )
+    fr = process_file(path, Options())
+    assert fr.failures == 0
+    assert fr.checked == 1
+
+
+def test_empty_setup_with_no_following_block_is_noop(tmp_path):
+    text = "<!-- mdoctest: setup -->\n\nSome prose, no code block.\n"
+    setups = parse_setups(text)
+    assert len(setups) == 1
+    assert setups[0].script == ""

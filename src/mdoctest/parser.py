@@ -150,6 +150,15 @@ def parse_setups(text: str) -> List["Setup"]:
             body = rest.split("-->", 1)[0]
             if body.strip():
                 script.append(body.strip())
+            else:
+                # Empty ``<!-- mdoctest: setup -->`` comment: attach the body of
+                # the immediately-following fenced code block as the fixture
+                # script. This mirrors how ``run``/``skip`` directives attach to
+                # the next block, so ``<!-- mdoctest: setup -->`` above a
+                # ```sh block just works instead of silently doing nothing.
+                block_body = _following_fence_body(lines, open_line + 1)
+                if block_body is not None:
+                    script.append(block_body)
             setups.append(Setup(open_line, "\n".join(script)))
             i += 1
             continue
@@ -169,6 +178,37 @@ def parse_setups(text: str) -> List["Setup"]:
         setups.append(Setup(open_line, "\n".join(script)))
         i = (closed_at + 1) if closed_at is not None else j
     return setups
+
+
+def _following_fence_body(lines: List[str], start: int):
+    """Return the body of the next fenced code block at/after ``start``.
+
+    Only blank lines may separate ``start`` from the opening fence; if the next
+    non-blank line is not a fence, return ``None``. Used to let an empty
+    ``<!-- mdoctest: setup -->`` comment adopt the following code block as its
+    fixture script.
+    """
+    n = len(lines)
+    k = start
+    while k < n and lines[k].strip() == "":
+        k += 1
+    if k >= n:
+        return None
+    m = _FENCE_RE.match(lines[k])
+    if not m:
+        return None
+    fence_char = m.group("fence")[0]
+    fence_len = len(m.group("fence"))
+    if fence_char == "`" and "`" in m.group("info"):
+        return None
+    j = k + 1
+    close = n
+    while j < n:
+        if re.match(r"^ {0,3}(?P<f>%s{%d,})\s*$" % (re.escape(fence_char), fence_len), lines[j]):
+            close = j
+            break
+        j += 1
+    return "\n".join(lines[k + 1:close])
 
 
 def _find_directive(lines: List[str], open_line: int):
