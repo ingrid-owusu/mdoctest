@@ -82,3 +82,25 @@ def test_fix_preserves_surrounding_text(tmp_path):
     out = open(path).read()
     assert "text before" in out and "text after" in out and "# Title" in out
     assert out.endswith("\n")
+
+
+def test_run_cmd_override_any_language(tmp_path):
+    # A block in an arbitrary "language" runs via an explicit cmd override.
+    md = ('<!-- mdoctest: run cmd="python3" ext=.py -->\n'
+          '```text\nprint("ok")\n```\n')
+    fr = process_file(_write(tmp_path, md), OPTS)
+    assert fr.checked == 1 and fr.failures == 0
+
+
+def test_run_cmd_override_nonzero_fails(tmp_path):
+    md = ('<!-- mdoctest: run cmd="python3" ext=.py -->\n'
+          '```text\nimport sys; sys.exit(3)\n```\n')
+    fr = process_file(_write(tmp_path, md), OPTS)
+    assert fr.failures == 1
+
+
+def test_run_unknown_lang_without_cmd_is_skipped(tmp_path):
+    # No built-in interpreter and no cmd override -> skipped, not failed.
+    md = "<!-- mdoctest: run -->\n```haskell\nmain = return ()\n```\n"
+    fr = process_file(_write(tmp_path, md), OPTS)
+    assert fr.failures == 0

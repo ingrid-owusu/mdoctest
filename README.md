@@ -129,14 +129,30 @@ ValueError: invalid literal for int() with base 10: 'not a number'
 ## Running code blocks, not just sessions
 
 To assert that a code block simply *runs* (exit 0), tag it with a directive.
-mdoctest uses the interpreter for the block's language (`python`, `bash`,
-`node`, `ruby`, ...):
+mdoctest uses the interpreter for the block's language — `python`, `bash`,
+`node`, `ruby`, `perl`, `php`, `lua`, `go`, `r` are built in:
 
 <!-- mdoctest: run -->
 ```python
 import json
 assert json.loads('{"a": 1}')["a"] == 1
 ```
+
+### Truly any language
+
+Not in the built-in list? Point mdoctest at *any* command with `cmd="..."`
+(and, if the toolchain needs a particular file extension, `ext=.xx`). The block
+body is written to a temp file and `cmd` is run on it:
+
+<!-- mdoctest: run cmd="node --check" ext=.js -->
+```text
+const x = 1;
+console.log(x);
+```
+
+That runs `node --check <tmpfile.js>` and passes only if it exits 0 — so you can
+syntax-check, type-check, compile, or execute blocks in Go, Rust, Zig, TypeScript,
+SQL, or whatever your project uses, with no plugins and no config file.
 
 And use `skip` to tell mdoctest to leave an illustrative block alone:
 

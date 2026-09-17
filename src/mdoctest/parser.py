@@ -8,8 +8,9 @@ string, their body, and their line span so ``--fix`` can rewrite them.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
-from typing import List, Optional
+import shlex
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional
 
 _FENCE_RE = re.compile(r"^(?P<indent> {0,3})(?P<fence>`{3,}|~{3,})(?P<info>.*)$")
 _DIRECTIVE_RE = re.compile(r"^\s*<!--\s*mdoctest:\s*(?P<body>.*?)\s*-->\s*$")
@@ -24,6 +25,9 @@ class Block:
     close_line: int      # 0-based index of the closing fence line (== EOF span)
     indent: str          # leading indentation of the fence
     directive: Optional[str] = None  # 'skip' | 'run' | None
+    # Options attached to the directive, e.g. ``run cmd="go run" ext=.go`` ->
+    # {"cmd": "go run", "ext": ".go"}. Empty when there is no directive.
+    directive_opts: Dict[str, str] = field(default_factory=dict)
 
     @property
     def body_start(self) -> int:
@@ -34,12 +38,30 @@ class Block:
         return self.close_line  # exclusive
 
 
-def _parse_directive(line: str) -> Optional[str]:
+def _parse_directive(line: str):
+    """Return ``(verb, opts)`` for an ``<!-- mdoctest: ... -->`` line.
+
+    ``verb`` is the lowercased first token ('skip' | 'run' | ...) or ``None``
+    when the line is not a directive / is empty. ``opts`` is a dict of the
+    ``key=value`` pairs that follow (values may be quoted), e.g.
+    ``run cmd="go run" ext=.go`` -> ('run', {'cmd': 'go run', 'ext': '.go'}).
+    """
     m = _DIRECTIVE_RE.match(line)
     if not m:
-        return None
-    tok = m.group("body").split()
-    return tok[0].lower() if tok else None
+        return None, {}
+    try:
+        tok = shlex.split(m.group("body"))
+    except ValueError:
+        tok = m.group("body").split()
+    if not tok:
+        return None, {}
+    verb = tok[0].lower()
+    opts: Dict[str, str] = {}
+    for t in tok[1:]:
+        if "=" in t:
+            k, v = t.split("=", 1)
+            opts[k.strip().lower()] = v
+    return verb, opts
 
 
 def parse_blocks(text: str) -> List[Block]:
@@ -72,22 +94,22 @@ def parse_blocks(text: str) -> List[Block]:
             j += 1
         body = lines[open_line + 1: close_line]
         lang = info.split()[0].lower() if info else ""
-        directive = _find_directive(lines, open_line)
+        directive, directive_opts = _find_directive(lines, open_line)
         blocks.append(Block(
             lang=lang, info=info, content="\n".join(body),
             open_line=open_line, close_line=close_line, indent=indent,
-            directive=directive,
+            directive=directive, directive_opts=directive_opts,
         ))
         i = close_line + 1
     return blocks
 
 
-def _find_directive(lines: List[str], open_line: int) -> Optional[str]:
+def _find_directive(lines: List[str], open_line: int):
     """A directive is an ``<!-- mdoctest: ... -->`` comment that is the nearest
     non-blank line above the fence (blank lines are allowed in between)."""
     k = open_line - 1
     while k >= 0 and lines[k].strip() == "":
         k -= 1
     if k < 0:
-        return None
+        return None, {}
     return _parse_directive(lines[k])

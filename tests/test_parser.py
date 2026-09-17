@@ -44,3 +44,13 @@ def test_unclosed_fence_runs_to_eof():
     md = "```console\n$ echo hi\nhi\n"
     b = parse_blocks(md)[0]
     assert b.content.strip() == "$ echo hi\nhi"
+
+
+def test_directive_opts_parsed():
+    from mdoctest.parser import parse_blocks
+    text = '<!-- mdoctest: run cmd="go run" ext=.go -->\n```go\nx\n```\n'
+    blocks = parse_blocks(text)
+    b = blocks[0]
+    assert b.directive == "run"
+    assert b.directive_opts["cmd"] == "go run"
+    assert b.directive_opts["ext"] == ".go"

@@ -4,6 +4,17 @@ All notable changes to mdoctest are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.3.0] - 2026-09-17
+
+### Added
+- **Any language, for real.** A `run` directive now accepts `cmd="..."` to run
+  a block with an arbitrary command (e.g. `<!-- mdoctest: run cmd="go run"
+  ext=.go -->`), and `ext=` to control the temp-file extension. Syntax-check,
+  compile, or execute blocks in Go, Rust, TypeScript, SQL — anything — with no
+  plugins and no config file.
+- More built-in interpreters for `run` blocks: `php`, `lua`, `go`, `r`, `deno`,
+  plus `perl`. The skip message for an unknown language now points at `cmd=`.
+
 ## [0.2.0] - 2026-09-17
 
 ### Added

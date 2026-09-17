@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import difflib
 import os
+import shlex
 import shutil
 import subprocess
 import tempfile
@@ -20,13 +21,33 @@ CONSOLE_LANGS = {"console", "shell-session", "sh-session", "shellsession",
                  "terminal", "con"}
 SHELLISH = {"sh", "bash", "shell", "zsh", "console"}
 
-# language -> interpreter argv for `run` (whole-block) mode
+# language -> interpreter argv for `run` (whole-block) mode.
+# For anything not listed here, tag the block with an explicit command, e.g.
+#   <!-- mdoctest: run cmd="go run" ext=.go -->
+# so mdoctest is genuinely language-agnostic (see _run_block).
 INTERPRETERS = {
     "python": ["python3"], "py": ["python3"], "python3": ["python3"],
     "bash": ["bash"], "sh": ["sh"], "shell": ["bash"], "zsh": ["zsh"],
-    "node": ["node"], "js": ["node"], "javascript": ["node"],
+    "node": ["node"], "js": ["node"], "javascript": ["node"], "mjs": ["node"],
     "ruby": ["ruby"], "rb": ["ruby"],
     "perl": ["perl"],
+    "php": ["php"],
+    "lua": ["lua"],
+    "go": ["go", "run"],
+    "r": ["Rscript"],
+    "deno": ["deno", "run", "-"],
+}
+
+# language -> temp-file suffix (some interpreters, e.g. `go run`, require it).
+SUFFIXES = {
+    "python": ".py", "py": ".py", "python3": ".py",
+    "node": ".js", "js": ".js", "javascript": ".js", "mjs": ".mjs",
+    "ruby": ".rb", "rb": ".rb",
+    "perl": ".pl",
+    "php": ".php",
+    "lua": ".lua",
+    "go": ".go",
+    "r": ".R",
 }
 
 
@@ -191,26 +212,37 @@ class _C:
 
 def _run_block(block: Block, cwd) -> BlockResult:
     br = BlockResult("run", block.open_line + 1, True)
-    argv = INTERPRETERS.get(block.lang)
+    # An explicit `cmd="..."` on the directive makes mdoctest work with *any*
+    # language/toolchain, not just the built-in interpreters.
+    cmd_override = block.directive_opts.get("cmd")
+    if cmd_override:
+        try:
+            argv = shlex.split(cmd_override)
+        except ValueError:
+            argv = cmd_override.split()
+    else:
+        argv = INTERPRETERS.get(block.lang)
     if not argv:
         br.ok = True
-        br.skipped_reason = "no interpreter for '%s'" % block.lang
+        br.skipped_reason = (
+            "no interpreter for '%s' (add `cmd=\"...\"` to the directive)"
+            % (block.lang or "?"))
         return br
     exe = shutil.which(argv[0])
     if not exe:
         br.ok = True
         br.skipped_reason = "%s not installed" % argv[0]
         return br
-    suffix = {"python": ".py", "py": ".py", "python3": ".py",
-              "node": ".js", "js": ".js", "javascript": ".js",
-              "ruby": ".rb", "rb": ".rb"}.get(block.lang, ".sh")
+    suffix = block.directive_opts.get("ext") or SUFFIXES.get(block.lang, ".sh")
+    if suffix and not suffix.startswith("."):
+        suffix = "." + suffix
     with tempfile.NamedTemporaryFile("w", suffix=suffix, delete=False,
                                      dir=cwd, encoding="utf-8") as tf:
         tf.write(block.content)
         tmp = tf.name
     try:
-        proc = subprocess.run([exe, tmp], cwd=cwd, capture_output=True,
-                              text=True, timeout=60)
+        proc = subprocess.run([exe] + argv[1:] + [tmp], cwd=cwd,
+                              capture_output=True, text=True, timeout=60)
         if proc.returncode != 0:
             br.ok = False
             br.message = (proc.stdout + proc.stderr).strip()[-2000:]
