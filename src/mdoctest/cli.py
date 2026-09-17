@@ -99,11 +99,12 @@ def main(argv=None) -> int:
                     print("%s  %s (%s)" % (c("32", "PASS"), loc, b.kind))
                 continue
             print("%s  %s (%s)" % (c("31", "FAIL"), loc, b.kind))
-            if b.kind == "session":
+            if b.kind in ("session", "pydoctest"):
+                prompt = ">>>" if b.kind == "pydoctest" else "$"
                 for cr in b.cmds:
                     if cr.ok:
                         continue
-                    print("    %s %s" % (c("36", "$"), cr.command.replace("\n", "\n      ")))
+                    print("    %s %s" % (c("36", prompt), cr.command.replace("\n", "\n      ")))
                     diff = render_diff(cr.expected, cr.actual, color=color)
                     for dl in diff.split("\n"):
                         print("      " + dl)

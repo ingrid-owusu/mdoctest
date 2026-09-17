@@ -98,6 +98,34 @@ build ... finished
 
 A bare `...` line matches any number of lines (including none).
 
+## Python `>>>` doctests
+
+Blocks tagged `pycon` (or a `python` / untagged block whose first line is a
+`>>>` prompt) are run exactly like Python's own `doctest`: each statement is
+executed in a **shared namespace** and its result is checked against the
+expected output. `--fix` rewrites the expected output for these too.
+
+```pycon
+>>> nums = [3, 1, 2]
+>>> sorted(nums)
+[1, 2, 3]
+>>> for n in sorted(nums):
+...     print(n)
+1
+2
+3
+```
+
+Exceptions work the way they do in `doctest` — elide the traceback body with
+`...`:
+
+```pycon
+>>> int("not a number")
+Traceback (most recent call last):
+  ...
+ValueError: invalid literal for int() with base 10: 'not a number'
+```
+
 ## Running code blocks, not just sessions
 
 To assert that a code block simply *runs* (exit 0), tag it with a directive.
@@ -127,9 +155,10 @@ clearly meant to be executable:
 | ` ```console ` / ` ```shell-session ` with `$` prompts | ✅ session, output checked |
 | ` ```bash `/` ```sh ` whose first line starts with `$ ` | ✅ session, output checked |
 | ` ```bash ` that's just a command listing (no `$`) | ⛔ ignored |
+| ` ```pycon ` / any block whose first line is `>>> ` | ✅ Python doctest, output checked |
 | any block preceded by `<!-- mdoctest: run -->` | ✅ run, must exit 0 |
 | any block preceded by `<!-- mdoctest: skip -->` | ⛔ ignored |
-| everything else (` ```python `, ` ```json `, ...) | ⛔ ignored |
+| everything else (plain ` ```python `, ` ```json `, ...) | ⛔ ignored |
 
 ## Use it in CI (GitHub Action)
 

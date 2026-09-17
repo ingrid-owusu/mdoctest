@@ -11,6 +11,9 @@ from typing import List, Optional
 
 from .match import matches, normalize
 from .parser import Block, parse_blocks
+from .pydoctest import check as pydoctest_check
+from .pydoctest import fix as pydoctest_fix
+from .pydoctest import is_pydoctest
 from .session import Shell, parse_session
 
 CONSOLE_LANGS = {"console", "shell-session", "sh-session", "shellsession",
@@ -118,6 +121,24 @@ def process_file(path: str, opts: Options, fix: bool = False) -> FileResult:
         if block.directive == "skip":
             fr.blocks.append(BlockResult("skip", block.open_line + 1, True,
                                          skipped_reason="skip directive"))
+            continue
+
+        if is_pydoctest(block.lang, block.content):
+            br = BlockResult("pydoctest", block.open_line + 1, True)
+            ok_all, rows = pydoctest_check(block.content, path)
+            for src, want, got, ok in rows:
+                br.cmds.append(CmdResult(src, want, got, ok))
+                if not ok:
+                    br.ok = False
+            if not br.cmds:
+                continue
+            fr.blocks.append(br)
+            if fix and not br.ok:
+                new_body = pydoctest_fix(block.content, path)
+                new_lines = new_body.split("\n")
+                if new_lines and new_lines[-1] == "":
+                    new_lines.pop()
+                edits.append((block.body_start, block.body_end, new_lines))
             continue
 
         if block.directive == "run" and block.lang not in CONSOLE_LANGS:
