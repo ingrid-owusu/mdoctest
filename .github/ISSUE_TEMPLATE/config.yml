@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation & examples
+    url: https://github.com/ingrid-owusu/mdoctest#readme
+    about: The README covers session blocks, >>> doctests, run/setup/skip directives, --fix, pre-commit and the GitHub Action.

@@ -1,0 +1,44 @@
+name: Bug report
+description: mdoctest mishandles a Markdown pattern or produces a wrong result
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report! The most useful thing you can include is the
+        **smallest Markdown snippet** that reproduces the problem.
+  - type: textarea
+    id: snippet
+    attributes:
+      label: Minimal Markdown that reproduces the issue
+      description: Paste the smallest doc (fenced blocks + any directives) that shows the bug.
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command you ran
+      placeholder: mdoctest README.md
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected vs. what happened
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: mdoctest version
+      description: Output of `mdoctest --version`
+    validations:
+      required: true
+  - type: input
+    id: python
+    attributes:
+      label: Python version and OS
+      placeholder: "Python 3.12 on Ubuntu 24.04"
+    validations:
+      required: true
