@@ -43,6 +43,20 @@ Or run it without installing:
 $ pipx run mdoctest README.md
 ```
 
+## Wire it into your repo in one command
+
+<!-- mdoctest: skip -->
+```console
+$ mdoctest --init
+mdoctest: created .pre-commit-config.yaml
+mdoctest: created .github/workflows/mdoctest.yml
+```
+
+`--init` scaffolds a pre-commit hook **and** a GitHub Actions workflow so your
+docs get checked on every commit and every pull request. It's idempotent and
+never clobbers existing config — if you already have a `.pre-commit-config.yaml`,
+the mdoctest hook is appended; an existing workflow is left untouched.
+
 ## Quick start
 
 Write a normal console session in your Markdown, exactly the way you already do:
@@ -261,7 +275,7 @@ in Actions (`GITHUB_ACTIONS=true`); control it anywhere with
 # .pre-commit-config.yaml
 repos:
   - repo: https://github.com/ingrid-owusu/mdoctest
-    rev: v0.4.0
+    rev: v0.6.0
     hooks:
       - id: mdoctest
 ```
@@ -269,13 +283,14 @@ repos:
 ## CLI
 
 ```
-mdoctest [PATHS ...] [--fix] [--shell bash] [--prompt '$ '] [--timeout 30]
+mdoctest [PATHS ...] [--fix] [--init] [--shell bash] [--prompt '$ '] [--timeout 30]
          [--cwd DIR] [--color auto|always|never]
          [--annotate auto|always|never] [-q]
 ```
 
 - **PATHS** — Markdown files or globs. Defaults to `README.md`.
 - **--fix** — rewrite expected output in place to match reality.
+- **--init** — scaffold a pre-commit hook + GitHub Actions workflow, then exit.
 - **--cwd** — working directory for commands (default: the Markdown file's dir).
 - **--timeout** — per-command timeout in seconds (default: 30).
 

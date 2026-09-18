@@ -4,6 +4,16 @@ All notable changes to mdoctest are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.6.0] - 2026-09-18
+
+### Added
+- **`mdoctest --init`.** One command scaffolds a pre-commit hook
+  (`.pre-commit-config.yaml`) *and* a GitHub Actions workflow
+  (`.github/workflows/mdoctest.yml`) so a project checks its own docs on every
+  commit and every pull request. Idempotent and non-destructive: an existing
+  `.pre-commit-config.yaml` gets the mdoctest hook appended (never duplicated),
+  and an existing workflow is left untouched. Lowers adoption to a single step.
+
 ## [0.5.1] - 2026-09-17
 
 ### Added

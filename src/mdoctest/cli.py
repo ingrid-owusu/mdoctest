@@ -65,6 +65,9 @@ def build_parser() -> argparse.ArgumentParser:
                    help="Markdown files or globs (default: README.md)")
     p.add_argument("--fix", action="store_true",
                    help="rewrite expected output in place to match reality")
+    p.add_argument("--init", action="store_true",
+                   help="scaffold a pre-commit hook + GitHub Actions workflow so "
+                        "this repo checks its own docs, then exit")
     p.add_argument("--shell", default="bash", help="shell for sessions (default: bash)")
     p.add_argument("--prompt", default="$ ", help="command prompt (default: '$ ')")
     p.add_argument("--cont", default="> ", help="continuation prompt (default: '> ')")
@@ -84,6 +87,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
+    if args.init:
+        from .scaffold import init
+        return init()
     color = _want_color(args.color)
     annotate = _want_annotations(args.annotate) and not args.fix
     paths = _expand(args.paths) if args.paths else (
