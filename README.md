@@ -13,6 +13,7 @@ interpreter you already have.
 [![PyPI](https://img.shields.io/pypi/v/mdoctest.svg)](https://pypi.org/project/mdoctest/)
 [![Python](https://img.shields.io/pypi/pyversions/mdoctest.svg)](https://pypi.org/project/mdoctest/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![docs tested with mdoctest](https://img.shields.io/badge/docs-tested%20with%20mdoctest-3fb950)](https://github.com/ingrid-owusu/mdoctest)
 
 ![mdoctest catching a drifted example and fixing it](assets/demo.svg)
 
@@ -279,6 +280,18 @@ repos:
     hooks:
       - id: mdoctest
 ```
+
+## Show it off
+
+Once mdoctest verifies your docs in CI, add the badge so readers know your
+examples actually run:
+
+<!-- mdoctest: skip -->
+```markdown
+[![docs tested with mdoctest](https://img.shields.io/badge/docs-tested%20with%20mdoctest-3fb950)](https://github.com/ingrid-owusu/mdoctest)
+```
+
+It renders like this: [![docs tested with mdoctest](https://img.shields.io/badge/docs-tested%20with%20mdoctest-3fb950)](https://github.com/ingrid-owusu/mdoctest)
 
 ## CLI
 
