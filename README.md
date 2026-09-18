@@ -41,7 +41,8 @@ Or run it without installing:
 
 <!-- mdoctest: skip -->
 ```console
-$ pipx run mdoctest README.md
+$ uvx mdoctest README.md      # with uv
+$ pipx run mdoctest README.md  # with pipx
 ```
 
 ## Wire it into your repo in one command
