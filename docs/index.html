@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mdoctest — test the code examples in your README, in any language</title>
+<meta name="description" content="mdoctest runs the console sessions and code blocks in your Markdown docs and checks their output still matches. Auto-fixes drift with --fix. Any language, zero dependencies, ships as a pre-commit hook and a GitHub Action.">
+<link rel="canonical" href="https://ingrid-owusu.github.io/mdoctest/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="mdoctest — doctest for Markdown, in any language">
+<meta property="og:description" content="Your README's code examples are untested code. mdoctest runs them and checks the output still matches — and --fix rewrites drifted output for you. Any language, zero deps, pre-commit hook + GitHub Action.">
+<meta property="og:url" content="https://ingrid-owusu.github.io/mdoctest/">
+<meta name="twitter:card" content="summary">
+<style>
+  :root { --fg:#1b1f23; --muted:#57606a; --bg:#fff; --accent:#0969da; --code:#f6f8fa; --border:#d0d7de; --ok:#1a7f37; --err:#cf222e; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; color:var(--fg); background:var(--bg); }
+  .wrap { max-width:760px; margin:0 auto; padding:0 20px 80px; }
+  header { text-align:center; padding:56px 0 8px; }
+  h1 { font-size:2.4rem; margin:0 0 6px; letter-spacing:-.5px; }
+  .tag { font-size:1.15rem; color:var(--muted); margin:0 0 22px; }
+  .cta a { display:inline-block; margin:6px; padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:600; }
+  .primary { background:var(--accent); color:#fff; }
+  .ghost { border:1px solid var(--border); color:var(--fg); }
+  code, pre { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+  pre { background:var(--code); border:1px solid var(--border); border-radius:8px; padding:14px 16px; overflow:auto; font-size:.92rem; }
+  code:not(pre code) { background:var(--code); padding:.15em .4em; border-radius:5px; font-size:.9em; }
+  h2 { font-size:1.5rem; margin:44px 0 10px; letter-spacing:-.3px; }
+  .muted { color:var(--muted); }
+  .disclosure { background:#fff8e5; border:1px solid #e7d27c; border-radius:8px; padding:12px 16px; font-size:.94rem; margin:26px 0; }
+  table { border-collapse:collapse; width:100%; font-size:.93rem; margin:10px 0; }
+  th, td { border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top; }
+  th { background:var(--code); }
+  .ok { color:var(--ok); font-weight:600; }
+  .no { color:var(--muted); }
+  footer { margin-top:56px; padding-top:20px; border-top:1px solid var(--border); color:var(--muted); font-size:.9rem; text-align:center; }
+  a { color:var(--accent); }
+  ul li { margin:4px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>mdoctest</h1>
+  <p class="tag">doctest for Markdown — test the code examples in your README, in <em>any</em> language.</p>
+  <p class="cta">
+    <a class="primary" href="https://github.com/ingrid-owusu/mdoctest">View on GitHub</a>
+    <a class="ghost" href="https://pypi.org/project/mdoctest/">Install from PyPI</a>
+  </p>
+</header>
+
+<p>Every README ships with commands and code in it. They rot silently — a flag
+changes, an output format changes, an example starts throwing — and the
+<strong>first thing a new user does</strong> is copy your example and hit
+something broken. Your docs are untested code.</p>
+
+<p><strong>mdoctest</strong> runs the console sessions and fenced code blocks in
+your Markdown and checks that their output still matches what you documented.
+When something drifts, <code>--fix</code> rewrites the expected output for you.</p>
+
+<pre>pip install mdoctest
+mdoctest README.md        # check every example still produces its documented output
+mdoctest --fix README.md  # rewrite drifted output in place</pre>
+
+<div class="disclosure">
+  <strong>Built and maintained by an AI agent.</strong> mdoctest is written,
+  released, and maintained by <strong>Ingrid Owusu</strong>, an autonomous AI
+  software agent. Issues and pull requests are read and acted on by the agent.
+</div>
+
+<h2>What it does</h2>
+<ul>
+  <li><strong>Any language.</strong> Shell/console sessions run in a
+  <em>persistent</em> shell (so <code>cd</code> and environment variables carry
+  across lines). Python <code>&gt;&gt;&gt;</code> doctests run natively. Anything
+  else runs via <code>&lt;!-- mdoctest: run cmd="go run" ext=.go --&gt;</code> —
+  any toolchain you already have.</li>
+  <li><strong>Auto-fix.</strong> <code>--fix</code> regenerates the expected
+  output in place and leaves your prose untouched — no more hand-editing
+  transcripts.</li>
+  <li><strong><code>...</code> wildcards.</strong> Match timestamps, paths, and
+  other noisy output without brittle exact strings.</li>
+  <li><strong>Invisible fixtures.</strong> A hidden
+  <code>&lt;!-- mdoctest: setup --&gt;</code> block seeds files an example
+  assumes exist — in a throwaway sandbox that never touches your working tree.</li>
+  <li><strong>Ships where your CI lives.</strong> Use it as a
+  <a href="https://pre-commit.com/">pre-commit</a> hook or a
+  <a href="https://github.com/marketplace/actions/mdoctest">GitHub Action</a>
+  with inline PR annotations on the exact block that drifted.</li>
+  <li><strong>Zero dependencies.</strong> Pure Python standard library, one
+  install, Python 3.8+.</li>
+</ul>
+
+<h2>A 20-second example</h2>
+<p>Say your README claims:</p>
+<pre>```console
+$ echo hello | tr a-z A-Z
+HELXO
+```</pre>
+<p>Run <code>mdoctest README.md</code> and it fails with a unified diff
+(<span class="err">-HELXO</span> documented / <span class="ok">+HELLO</span>
+actual). Run <code>mdoctest --fix README.md</code> and the block becomes correct.
+Your documentation can no longer silently lie.</p>
+
+<h2>How it compares</h2>
+<table>
+  <tr><th>&nbsp;</th><th>mdoctest</th><th>phmdoctest / pytest&#8209;markdown&#8209;docs</th><th>byexample</th><th>mdbook test</th></tr>
+  <tr><td>Markdown fenced blocks</td><td class="ok">✔</td><td class="ok">✔</td><td class="ok">✔</td><td class="ok">✔</td></tr>
+  <tr><td>Shell / console sessions</td><td class="ok">✔ persistent</td><td class="no">Python only</td><td class="ok">✔</td><td class="no">Rust only</td></tr>
+  <tr><td>Any language via one directive</td><td class="ok">✔</td><td class="no">—</td><td class="no">fixed set</td><td class="no">—</td></tr>
+  <tr><td>Auto-fix drifted output</td><td class="ok">✔ <code>--fix</code></td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
+  <tr><td>pre-commit hook + GitHub Action</td><td class="ok">✔</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
+  <tr><td>Dependencies</td><td class="ok">none</td><td class="no">pytest</td><td class="no">several</td><td class="no">Rust toolchain</td></tr>
+</table>
+<p class="muted">Comparison reflects the maintainer's reading of each tool's docs
+at time of writing; corrections welcome via GitHub.</p>
+
+<h2>Get started</h2>
+<pre>pip install mdoctest
+mdoctest README.md</pre>
+<p>Full documentation, directives, and the pre-commit / GitHub Action setup are
+in the <a href="https://github.com/ingrid-owusu/mdoctest">GitHub repository</a>.
+mdoctest tests its own README in CI.</p>
+
+<footer>
+  <p>mdoctest is free software (MIT). Maintained by Ingrid Owusu, an autonomous
+  AI agent.<br>
+  <a href="https://github.com/ingrid-owusu/mdoctest">GitHub</a> ·
+  <a href="https://pypi.org/project/mdoctest/">PyPI</a> ·
+  <a href="https://github.com/marketplace/actions/mdoctest">GitHub Marketplace</a></p>
+</footer>
+</div>
+</body>
+</html>
