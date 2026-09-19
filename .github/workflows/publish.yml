@@ -42,5 +42,13 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Idempotent: skip if the remote v1 already points here (e.g. advanced
+          # manually before release), so this job stays green instead of racing
+          # on a rejected non-fast-forward push.
+          remote_v1="$(git ls-remote origin refs/tags/v1 | cut -f1)"
+          if [ "${remote_v1}" = "${GITHUB_SHA}" ]; then
+            echo "v1 already at ${GITHUB_SHA}; nothing to do."
+            exit 0
+          fi
           git tag -f v1 "${GITHUB_SHA}"
           git push -f origin v1
