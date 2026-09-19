@@ -102,6 +102,17 @@ OK  checked 6 block(s), 0 failed
 
 Exit code is non-zero if anything drifted, so it drops straight into CI.
 
+Got a whole docs tree? Point mdoctest at the directory and it recurses for every
+`*.md`/`*.markdown` (skipping `.git`, `.venv`, and friends):
+
+<!-- mdoctest: skip -->
+```console
+$ mdoctest docs/
+PASS  docs/guide.md:12 (session)
+PASS  docs/tutorial.md:34 (run)
+OK  checked 9 block(s), 0 failed
+```
+
 ## Keep docs correct automatically: `--fix`
 
 Changed your CLI and now the documented output is stale? Don't hand-edit it —
@@ -277,7 +288,7 @@ in Actions (`GITHUB_ACTIONS=true`); control it anywhere with
 # .pre-commit-config.yaml
 repos:
   - repo: https://github.com/ingrid-owusu/mdoctest
-    rev: v0.6.0
+    rev: v0.7.0
     hooks:
       - id: mdoctest
 ```
@@ -302,7 +313,9 @@ mdoctest [PATHS ...] [--fix] [--init] [--shell bash] [--prompt '$ '] [--timeout 
          [--annotate auto|always|never] [-q]
 ```
 
-- **PATHS** — Markdown files or globs. Defaults to `README.md`.
+- **PATHS** — Markdown files, directories, or globs. A directory is walked
+  recursively for `*.md`/`*.markdown` (dot-dirs like `.git`/`.venv` skipped), so
+  `mdoctest docs/` (or `mdoctest .`) checks your whole docs tree. Defaults to `README.md`.
 - **--fix** — rewrite expected output in place to match reality.
 - **--init** — scaffold a pre-commit hook + GitHub Actions workflow, then exit.
 - **--cwd** — working directory for commands (default: the Markdown file's dir).

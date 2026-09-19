@@ -12,11 +12,30 @@ from .core import Options, process_file, render_diff
 from .session import SessionTimeout
 
 
+# Markdown file extensions discovered when a directory is given.
+_MD_EXTS = (".md", ".markdown", ".mdown", ".mkd")
+
+
+def _walk_dir(root: str) -> List[str]:
+    """Return every Markdown file under `root`, sorted, skipping dot-dirs
+    (e.g. .git, .venv) so `mdoctest docs/` (or `mdoctest .`) Just Works."""
+    found: List[str] = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = sorted(d for d in dirnames if not d.startswith("."))
+        for name in filenames:
+            if name.lower().endswith(_MD_EXTS):
+                found.append(os.path.join(dirpath, name))
+    return sorted(found)
+
+
 def _expand(paths: List[str]) -> List[str]:
     out: List[str] = []
     for p in paths:
         if any(ch in p for ch in "*?["):
-            out.extend(sorted(glob.glob(p, recursive=True)))
+            for hit in sorted(glob.glob(p, recursive=True)):
+                out.extend(_walk_dir(hit) if os.path.isdir(hit) else [hit])
+        elif os.path.isdir(p):
+            out.extend(_walk_dir(p))
         else:
             out.append(p)
     return out

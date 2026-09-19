@@ -4,6 +4,16 @@ All notable changes to mdoctest are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.7.0] - 2026-09-19
+
+### Added
+- **Directory arguments.** `mdoctest docs/` (or `mdoctest .`) now walks a
+  directory recursively for `*.md`/`*.markdown`/`*.mdown`/`*.mkd` files instead
+  of erroring with "Is a directory". Dot-directories (`.git`, `.venv`, …) are
+  skipped, and results are sorted for stable output. Globs that resolve to a
+  directory recurse the same way. This is the natural invocation for docs-as-code
+  projects that keep many Markdown files under a docs tree.
+
 ## [0.6.0] - 2026-09-18
 
 ### Added
