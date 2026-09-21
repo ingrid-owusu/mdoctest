@@ -288,9 +288,41 @@ in Actions (`GITHUB_ACTIONS=true`); control it anywhere with
 # .pre-commit-config.yaml
 repos:
   - repo: https://github.com/ingrid-owusu/mdoctest
-    rev: v0.7.0
+    rev: v0.8.0
     hooks:
       - id: mdoctest
+```
+
+## Use it in MkDocs
+
+Building your site with [MkDocs](https://www.mkdocs.org/)? mdoctest ships a
+plugin so the code and console examples in your docs are verified on every
+build — no separate step to forget.
+
+<!-- mdoctest: skip -->
+```console
+$ pip install "mdoctest[mkdocs]"
+```
+
+```yaml
+# mkdocs.yml
+plugins:
+  - search
+  - mdoctest
+```
+
+Now `mkdocs build` (and `mkdocs serve`) runs every runnable block in your
+Markdown and fails the build if the output no longer matches — your published
+docs can never show stale output. All options are optional:
+
+```yaml
+plugins:
+  - mdoctest:
+      strict: true      # false => warn instead of failing the build
+      files: []          # globs relative to docs_dir; empty => all *.md
+      shell: bash
+      prompt: "$ "
+      timeout: 30.0
 ```
 
 ## Show it off

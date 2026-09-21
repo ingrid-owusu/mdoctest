@@ -4,6 +4,17 @@ All notable changes to mdoctest are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.8.0] - 2026-09-21
+
+### Added
+- **MkDocs plugin.** `pip install "mdoctest[mkdocs]"` and add `mdoctest` to the
+  `plugins:` list in `mkdocs.yml` to verify every runnable code/console block in
+  your docs on each `mkdocs build`/`serve`. Drift fails the build (or warns, with
+  `strict: false`) and points at the offending file and line. Options: `enabled`,
+  `strict`, `files` (globs relative to `docs_dir`), `shell`, `prompt`, `timeout`.
+  The plugin logic lives in a mkdocs-free helper (`mdoctest.mkdocs_check`) so it
+  is fully unit-tested; core mdoctest keeps zero runtime dependencies.
+
 ## [0.7.0] - 2026-09-19
 
 ### Added
