@@ -4,6 +4,21 @@ All notable changes to mdoctest are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.9.0] - 2026-09-22
+
+### Added
+- **Sphinx extension.** `pip install "mdoctest[sphinx]"` and add
+  `"mdoctest.sphinx_ext"` to `extensions` in your `conf.py` to verify every
+  runnable console/code block in your Markdown (MyST) docs on each
+  `sphinx-build`. Drift fails the build with a clean, non-zero exit and a
+  `file:line` pointer (or warns, with `mdoctest_strict = False`). Settings:
+  `mdoctest_enabled`, `mdoctest_strict`, `mdoctest_files` (globs relative to the
+  source dir), `mdoctest_shell`, `mdoctest_prompt`, `mdoctest_timeout`. `.rst`
+  sources are intentionally left to Sphinx's own `sphinx.ext.doctest`. The
+  checker logic lives in a sphinx-free helper (`mdoctest.sphinx_check`) so it is
+  unit-tested; core mdoctest keeps zero runtime dependencies. Added the
+  `Framework :: Sphinx` classifiers.
+
 ## [0.8.0] - 2026-09-21
 
 ### Added

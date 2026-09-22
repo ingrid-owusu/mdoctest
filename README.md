@@ -288,7 +288,7 @@ in Actions (`GITHUB_ACTIONS=true`); control it anywhere with
 # .pre-commit-config.yaml
 repos:
   - repo: https://github.com/ingrid-owusu/mdoctest
-    rev: v0.8.0
+    rev: v0.9.0
     hooks:
       - id: mdoctest
 ```
@@ -323,6 +323,41 @@ plugins:
       shell: bash
       prompt: "$ "
       timeout: 30.0
+```
+
+## Use it in Sphinx
+
+Writing your docs in Markdown with [MyST](https://myst-parser.readthedocs.io/)?
+mdoctest ships a Sphinx extension so the console and code examples in your
+Markdown sources are verified on every `sphinx-build`. (`.rst` is left to
+Sphinx's own `sphinx.ext.doctest`; mdoctest covers the Markdown docs and the
+shell/other-language blocks `doctest` can't run.)
+
+<!-- mdoctest: skip -->
+```console
+$ pip install "mdoctest[sphinx]"
+```
+
+```python
+# conf.py
+extensions = [
+    "myst_parser",          # so Sphinx reads Markdown sources
+    "mdoctest.sphinx_ext",
+]
+```
+
+Now `sphinx-build` (and `make html`) runs every runnable block in your Markdown
+docs and fails the build if the output no longer matches, pointing at the
+offending `file:line`. All settings are optional:
+
+```python
+# conf.py
+mdoctest_enabled = True     # master switch
+mdoctest_strict = True      # False => warn instead of failing the build
+mdoctest_files = []         # globs relative to the source dir; [] => all *.md
+mdoctest_shell = "bash"
+mdoctest_prompt = "$ "
+mdoctest_timeout = 30.0
 ```
 
 ## Show it off
